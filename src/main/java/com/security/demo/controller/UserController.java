@@ -1,9 +1,10 @@
 package com.security.demo.controller;
 
+import com.security.demo.dto.ApiResponse;
 import com.security.demo.dto.UserResponse;
 import com.security.demo.service.impl.UserService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,7 +20,7 @@ public class UserController {
     }
 
     @GetMapping("/me")
-    public UserResponse getCurrentUser(Authentication authentication) {
-        return userService.getCurrentUser(authentication);
+    public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getCurrentUser(authentication)));
     }
 }

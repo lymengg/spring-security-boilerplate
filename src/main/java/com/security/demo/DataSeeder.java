@@ -17,7 +17,7 @@ public class DataSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public void run(String... args) throws Exception {
+    public void run(String... args) {
         // Only seed if the database is empty to avoid duplicates on restart
         if (userRepository.count() == 0) {
 

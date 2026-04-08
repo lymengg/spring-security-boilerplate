@@ -1,5 +1,6 @@
 package com.security.demo.controller;
 
+import com.security.demo.dto.ApiResponse;
 import com.security.demo.dto.LoginRequest;
 import com.security.demo.dto.LoginResponse;
 import com.security.demo.security.jwt.JwtService;
@@ -24,8 +25,8 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
         LoginResponse response = authService.login(request);
-        return ResponseEntity.ok(response); // returns JSON with 200 OK
+        return ResponseEntity.ok(ApiResponse.success(response)); // returns JSON with 200 OK
     }
 }
