@@ -1,4 +1,4 @@
-package com.security.demo.security;
+package com.security.demo.security.event;
 
 import com.security.demo.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -8,12 +8,12 @@ import org.springframework.security.authentication.event.AuthenticationSuccessEv
 import org.springframework.stereotype.Component;
 
 @Component
-@Transactional // Important: updates database inside a transaction
-public class LoginAttemptService {
+@Transactional
+public class LoginAttemptListener {
 
     private final UserRepository userRepository;
 
-    public LoginAttemptService(UserRepository userRepository) {
+    public LoginAttemptListener(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
