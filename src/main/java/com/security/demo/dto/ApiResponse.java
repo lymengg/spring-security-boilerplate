@@ -1,20 +1,23 @@
 package com.security.demo.dto;
 
-import java.time.LocalDateTime;
-
 public record ApiResponse<T>(
-        boolean success,
+        int code,
         String message,
-        T data,
-        LocalDateTime timestamp
+        T data
 ) {
-    // Static helper for Success
-    public static <T> ApiResponse<T> success(T data, String message) {
-        return new ApiResponse<>(true, message, data, LocalDateTime.now());
+    public static <T> ApiResponse<T> success(T data) {
+        return new ApiResponse<>(200, "Success", data);
     }
 
-    // Static helper for Failure
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return new ApiResponse<>(200, message, data);
+    }
+
+    public static <T> ApiResponse<T> error(int code, String message) {
+        return new ApiResponse<>(code, message, null);
+    }
+
     public static <T> ApiResponse<T> error(String message) {
-        return new ApiResponse<>(false, message, null, LocalDateTime.now());
+        return new ApiResponse<>(500, message, null);
     }
 }

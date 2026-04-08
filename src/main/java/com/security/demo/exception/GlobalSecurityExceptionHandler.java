@@ -13,14 +13,14 @@ public class GlobalSecurityExceptionHandler {
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ApiResponse<Void>> handleBadCredentials() {
-        return ResponseEntity.status(401)
-                .body(ApiResponse.error("Invalid username or password."));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(401, "Invalid username or password."));
     }
 
     @ExceptionHandler(LockedException.class)
     public ResponseEntity<ApiResponse<Void>> handleLocked() {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ApiResponse.error(
+                .body(ApiResponse.error(401,
                         "Account locked due to multiple failed attempts. Please contact support to unlock."
                 ));
     }
