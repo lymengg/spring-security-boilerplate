@@ -6,10 +6,13 @@ import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.security.demo.security.RateLimitingFilter;
+import com.security.demo.service.TokenBlacklistService;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
@@ -24,21 +27,21 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
+import org.springframework.security.oauth2.jwt.*;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
+@EnableScheduling
 @EnableConfigurationProperties(RsaKeyProperties.class)
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, RateLimitingFilter rateLimitingFilter) {
         return http
                 .csrf(AbstractHttpConfigurer::disable) // Disable for stateless APIs
+                .addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll() // Login/Register endpoints
                         .anyRequest().authenticated()               // Protect everything else
@@ -56,8 +59,20 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(RsaKeyProperties keys) {
-        return NimbusJwtDecoder.withPublicKey(keys.getPublicKey()).build();
+    public JwtDecoder jwtDecoder(RsaKeyProperties keys, TokenBlacklistService tokenBlacklistService) {
+        NimbusJwtDecoder delegate = NimbusJwtDecoder.withPublicKey(keys.getPublicKey()).build();
+
+        return token -> {
+            Jwt jwt = delegate.decode(token);
+
+            // Check if token has been blacklisted (revoked via logout)
+            String tokenId = jwt.getId();
+            if (tokenId != null && tokenBlacklistService.isBlacklisted(tokenId)) {
+                throw new BadJwtException("Token has been revoked");
+            }
+
+            return jwt;
+        };
     }
 
     @Bean
